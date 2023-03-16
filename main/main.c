@@ -13,7 +13,7 @@
 
 
 /*
- * Use this Token for all I2c0 Transactions
+ * Use SW_I2c_Driver for thread safe i2c transaction
  */
 SemaphoreHandle_t I2c_Jeton =NULL;
 

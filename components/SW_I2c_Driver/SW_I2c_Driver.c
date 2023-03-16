@@ -12,6 +12,35 @@
 #include "SW_I2c_Driver.h"
 #include "stdio.h"
 
+/************** Private Functions ************************/
+
+/**
+ * @brief Writes data to an I2C device.
+ *
+ * @param handle The handle of the I2C port.
+ * @param ADD7bit The 7-bit address of the I2C device to write to.
+ * @param reg The register address to write to.
+ * @param bufp A pointer to the buffer that contains the data to write.
+ * @param len The length of the data to write.
+ * @return esp_err_t Returns ESP_OK on success or an error code on failure.
+ */
+static esp_err_t SW_I2c_Write(i2c_port_t handle, uint8_t ADD7bit ,uint8_t reg, const uint8_t *bufp, uint16_t len);
+
+/**
+ * @brief Read data from a register of an I2C device
+ *
+ * @param handle I2C port handle
+ * @param ADD7bit 7-bit address of the I2C device
+ * @param reg Register address to read from
+ * @param bufp Pointer to the buffer to store the read data
+ * @param len Length of the data to be read
+ * @return esp_err_t Returns ESP_OK on success or an error code on failure.
+ */
+static esp_err_t SW_I2c_Read(i2c_port_t handle, uint8_t ADD7bit ,uint8_t reg, uint8_t *bufp,uint16_t len);
+
+/************** Private Functions ************************/
+
+
 
 /**
  * @brief Thread-safe read function for I2C communication
@@ -79,7 +108,7 @@ esp_err_t SW_Thread_Safe_I2c_Write(SemaphoreHandle_t* Jeton,i2c_port_t handle, u
  * @param len The length of the data to write. 
  * @return esp_err_t Returns ESP_OK==> 0  on success or an error code ==>1 on failure.
  */
-esp_err_t SW_I2c_Write(i2c_port_t handle, uint8_t ADD7bit ,uint8_t reg, const uint8_t *bufp, uint16_t len)
+static esp_err_t SW_I2c_Write(i2c_port_t handle, uint8_t ADD7bit ,uint8_t reg, const uint8_t *bufp, uint16_t len)
 {
     i2c_cmd_handle_t cmd = i2c_cmd_link_create();
     i2c_master_start(cmd);  // Start bit
@@ -104,7 +133,7 @@ esp_err_t SW_I2c_Write(i2c_port_t handle, uint8_t ADD7bit ,uint8_t reg, const ui
  * @param len Length of the data to be read 
  * @return esp_err_t Returns ESP_OK==> 0  on success or an error code ==>1 on failure.
  */
-esp_err_t SW_I2c_Read(i2c_port_t handle, uint8_t ADD7bit ,uint8_t reg, uint8_t *bufp,uint16_t len)
+static esp_err_t SW_I2c_Read(i2c_port_t handle, uint8_t ADD7bit ,uint8_t reg, uint8_t *bufp,uint16_t len)
 {
 	   if (len == 0) {
 	        return ESP_OK;
