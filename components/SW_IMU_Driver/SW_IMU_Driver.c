@@ -87,8 +87,10 @@ void SW_Lsm6dso6_Init_Config(stmdev_ctx_t dev_ctx){
 	lsm6dso_wkup_dur_set(&dev_ctx, 0x02);
 	/* Set duration for Inactivity detection to 4.92 s (= 2 * 512 / ODR_XL) */
 	lsm6dso_act_sleep_dur_set(&dev_ctx, 0x02);
-	/* Set Activity/Inactivity threshold to 62.5 mg */
-	lsm6dso_wkup_threshold_set(&dev_ctx, 0x02);
+
+	/* Set Activity/Inactivity threshold to 125 mg */
+	/*********** 1LSB = FS_XL/2^(6) ==> 4LSB = (2g/64)*4 * 10^(3) mg = 125 mg**************/
+	lsm6dso_wkup_threshold_set(&dev_ctx, 0x08);
 	/* Inactivity configuration: XL to 12.5 in LP, gyro to Power-Down */
 	lsm6dso_act_mode_set(&dev_ctx, LSM6DSO_XL_12Hz5_GY_PD);
 	/* Enable interrupt generation on Inactivity INT1 pin */

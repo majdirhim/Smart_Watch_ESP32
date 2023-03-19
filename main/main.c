@@ -89,7 +89,7 @@ void StepCounter(void * pvParameters ){
 	for(;;){
 		lsm6dso_number_of_steps_get(&Lsm6dso_dev_ctx, &steps); //step Counting
 		SW_SafePrint(&UART_Jeton,"steps :%d\r\n", steps);
-		vTaskDelay(10/portTICK_PERIOD_MS);
+		vTaskDelay(100/portTICK_PERIOD_MS);
 	}
 }
 
