@@ -15,7 +15,8 @@
 #include "esp_timer.h"
 #include "esp_sleep.h"
 
-
+#define I2C_MASTER_SCL_IO 19
+#define I2C_MASTER_SDA_IO 18
 #define LSM6DSO_INT1 25 //GPIO25 => RTC_GPIO6
 
 esp_err_t SW_SafePrint(SemaphoreHandle_t* Jeton,const char* fmt, ...);
@@ -89,16 +90,14 @@ void StepCounter(void * pvParameters ){
 	for(;;){
 		lsm6dso_number_of_steps_get(&Lsm6dso_dev_ctx, &steps); //step Counting
 		SW_SafePrint(&UART_Jeton,"steps :%d\r\n", steps);
-		vTaskDelay(100/portTICK_PERIOD_MS);
+		vTaskDelay(1000/portTICK_PERIOD_MS);
 	}
 }
 
 
-
-
-
 void LIS2MDL_TASK(void * pvParameters){
 	uint8_t reg;
+	double norm_x,norm_y,angle,angle_degree;
 	for(;;){
 		/* Read output only if new value is available */
 		lis2mdl_mag_data_ready_get(&Lis2mdl_dev_ctx, &reg);
@@ -109,15 +108,22 @@ void LIS2MDL_TASK(void * pvParameters){
 			magnetic_mG[0] = lis2mdl_from_lsb_to_mgauss( data_raw_magnetic[0]);
 			magnetic_mG[1] = lis2mdl_from_lsb_to_mgauss( data_raw_magnetic[1]);
 			magnetic_mG[2] = lis2mdl_from_lsb_to_mgauss( data_raw_magnetic[2]);
-			SW_SafePrint(&UART_Jeton,"Mag field [mG]:%4.2f\t%4.2f\t%4.2f\r\n",magnetic_mG[0], magnetic_mG[1], magnetic_mG[2]);
+			//SW_SafePrint(&UART_Jeton,"Mag field [mG]:%4.2f\t%4.2f\t%4.2f\r\n",magnetic_mG[0], magnetic_mG[1], magnetic_mG[2]);
+			 norm_x=magnetic_mG[0]/sqrt(magnetic_mG[0]*magnetic_mG[0] + magnetic_mG[1]*magnetic_mG[1]+magnetic_mG[2]*magnetic_mG[2]);
+			 norm_y=magnetic_mG[1]/sqrt(magnetic_mG[0]*magnetic_mG[0] + magnetic_mG[1]*magnetic_mG[1]+magnetic_mG[2]*magnetic_mG[2]);
+			 angle = atan2(norm_x,norm_y);
+			 angle_degree = angle*(180/M_PI)-1.1333; // 1.1333 poitiers-declination
 
+			// print the result
+			SW_SafePrint(&UART_Jeton, "The North direction relative to the sensor: %5.1f deg\r\n", angle_degree);
 			/* Read temperature data */
+			/*
 			memset(&data_raw_temperature, 0x00, sizeof(int16_t));
 			lis2mdl_temperature_raw_get(&Lis2mdl_dev_ctx, &data_raw_temperature);
 			temperature_degC =lis2mdl_from_lsb_to_celsius(data_raw_temperature);
-			SW_SafePrint(&UART_Jeton,"Temperature [degC]:%6.2f\r\n",temperature_degC);
+			SW_SafePrint(&UART_Jeton,"Temperature [degC]:%6.2f\r\n",temperature_degC);*/
 		}
-		vTaskDelay(1000/portTICK_PERIOD_MS);
+		vTaskDelay(2000/portTICK_PERIOD_MS);
 	}
 }
 
@@ -134,7 +140,7 @@ void app_main(void)
 	I2c_Jeton=xSemaphoreCreateBinary();
 	xSemaphoreGive(I2c_Jeton);
 
-	SW_I2c_Master_Init(I2C_NUM_0,19,18);
+	SW_I2c_Master_Init(I2C_NUM_0,I2C_MASTER_SCL_IO,I2C_MASTER_SDA_IO);
 	Lsm6dso_dev_ctx = SW_Mems_Interface_Init(I2C_NUM_0,0); //0=>Lsm6dso
 	Lis2mdl_dev_ctx = SW_Mems_Interface_Init(I2C_NUM_0,1);//1=>Lis2mdl
 	SW_Lsm6dso6_Init_Config(Lsm6dso_dev_ctx);
